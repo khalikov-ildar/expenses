@@ -1,0 +1,265 @@
+enum GroupStatus {
+  PENDING
+  ACTIVE
+  CANCELLED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum MemberStatus {
+  INVITED
+  ACTIVE
+  LEFT
+  DECLINED
+  EXPIRED
+}
+
+enum RefreshTokenRevocationReason {
+  ROTATED
+  LOGOUT
+  REUSE_DETECTED
+  PASSWORD_CHANGED
+  SECURITY_EVENT
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSED
+  DEAD_LETTER
+}
+
+model ExpenseGroup {
+  id        String      @id
+  status    GroupStatus @default(PENDING)
+  name         String
+  baseCurrency String
+  createdAt    DateTime    @default(now())
+
+  // Opaque identity ID. Intentionally has no relation to User or Member.
+  createdByIdentityId String
+
+  members     Member[]
+  invitations ExpenseGroupInvitation[]
+  expenses    Expense[]
+}
+
+model Member {
+  id         String       @id
+  identityId String
+  groupId    String
+  status     MemberStatus @default(INVITED)
+  createdAt  DateTime     @default(now())
+  joinedAt   DateTime?
+  endedAt    DateTime?
+
+  // A member record belongs to exactly one group.
+  group ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // identityId is intentionally a scalar, not a relation to the auth module.
+  sentInvitations     ExpenseGroupInvitation[] @relation("SentInvitations")
+  receivedInvitations ExpenseGroupInvitation[] @relation("ReceivedInvitations")
+  createdExpenses     Expense[]                @relation("ExpenseCreatedBy")
+  paidExpenses        Expense[]                @relation("ExpensePaidBy")
+  expenseParticipations ExpenseParticipant[]
+
+  @@unique([id, groupId])
+  @@index([identityId, groupId, status])
+}
+
+model ExpenseGroupInvitation {
+  id             String           @id
+  expenseGroupId String
+  inviterId      String
+  inviteeId      String
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now())
+  updatedAt      temporal.updatedAt()
+
+  group   ExpenseGroup @relation(fields: [expenseGroupId], references: [id], onDelete: Cascade)
+  inviter Member       @relation("SentInvitations", fields: [inviterId], references: [id])
+  invitee Member       @relation("ReceivedInvitations", fields: [inviteeId], references: [id])
+
+  // One invitation per membership episode. Rejoining creates a new Member ID.
+  @@unique([expenseGroupId, inviteeId])
+}
+
+model Expense {
+  id                String   @id
+  groupId           String
+  createdByMemberId String
+  paidByMemberId    String
+  description       String
+
+  // All monetary values are integer minor units. Prisma BigInt maps to JS bigint.
+  originalAmountMinor BigInt
+  originalCurrency    String
+  baseAmountMinor     BigInt
+  baseCurrency        String
+
+  // Exact FX quote snapshot: target major units per source major unit.
+  // Numerator/denominator are decimal strings to preserve arbitrary precision.
+  exchangeRateNumerator   String?
+  exchangeRateDenominator String?
+  exchangeRateProvider    String?
+  exchangeRateQuotedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  group ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdByMember Member @relation("ExpenseCreatedBy", fields: [createdByMemberId, groupId], references: [id, groupId], onDelete: Restrict)
+  paidByMember    Member @relation("ExpensePaidBy", fields: [paidByMemberId, groupId], references: [id, groupId], onDelete: Restrict)
+  participants    ExpenseParticipant[]
+
+  @@unique([id, groupId])
+  @@index([groupId, createdAt])
+  @@index([createdByMemberId])
+  @@index([paidByMemberId])
+}
+
+model ExpenseParticipant {
+  expenseId  String
+  memberId   String
+  groupId    String
+  amountMinor BigInt
+
+  // Composite relations ensure the participant and expense belong to the same group.
+  expense Expense @relation(fields: [expenseId, groupId], references: [id, groupId], onDelete: Cascade)
+  member  Member  @relation(fields: [memberId, groupId], references: [id, groupId], onDelete: Restrict)
+
+  // A membership episode can occur only once in an expense's split.
+  @@id([expenseId, memberId])
+  @@index([groupId, memberId])
+  @@index([memberId, expenseId])
+}
+
+model OutboxEvent {
+  id String @id
+
+  type          String
+  aggregateType String
+  aggregateId   String
+  occurredAt    DateTime
+  payload       Json
+
+  status OutboxEventStatus @default(PENDING)
+
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime?
+
+  leaseOwner String?
+  leaseUntil DateTime?
+
+  publishedAt DateTime?
+  lastError   String?
+
+  createdAt DateTime @default(now())
+  updatedAt temporal.updatedAt()
+
+  @@index([status, nextAttemptAt, leaseUntil])
+  @@index([leaseUntil])
+  @@index([aggregateType, aggregateId, occurredAt])
+  @@index([createdAt])
+}
+
+model OAuthTransaction {
+  id                 String    @id
+  provider           String
+  purpose            String
+  stateHash          String    @unique
+  browserBindingHash String
+  codeVerifier       String
+  userId             String?
+  expiresAt          DateTime
+  consumedAt         DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+model User {
+  id           String  @id
+  name         String?
+  email        String  @unique
+  passwordHash String?
+
+  refreshTokenFamilies    RefreshTokenFamily[]
+  externalIdentities      ExternalIdentity[]
+  emailVerificationTokens EmailVerificationToken[]
+  emailVerifiedAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt temporal.updatedAt()
+
+  @@index([id, email])
+}
+
+model ExternalIdentity {
+  id             String
+  provider       String
+  providerUserId String
+  userId         String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt temporal.updatedAt()
+
+  @@unique([provider, providerUserId], map: "provider_providerUserId")
+  @@index([userId])
+}
+
+model RefreshToken {
+  id            String                        @id
+  familyId      String
+  family        RefreshTokenFamily            @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  tokenHash     String                        @unique
+  generation    Int
+  parentId      String?
+  replacedById  String?
+  createdAt     DateTime                      @default(now())
+  expiresAt     DateTime
+  revoked       Boolean                       @default(false)
+  revokedAt     DateTime?
+  revokedReason RefreshTokenRevocationReason?
+
+  @@unique([familyId, generation])
+  @@index([familyId])
+}
+
+model RefreshTokenFamily {
+  id     String @id
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  refreshTokens RefreshToken[]
+
+  revokedAt     DateTime?
+  revokedReason RefreshTokenRevocationReason?
+
+  @@index([userId])
+  @@index([userId, revokedAt])
+}
+
+model EmailVerificationToken {
+  id         String    @id
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
+}

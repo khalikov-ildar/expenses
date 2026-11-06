@@ -1,0 +1,2542 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.emailVerificationToken",
+    "label": "Create table \"emailVerificationToken\"",
+    "summary": "Creates table \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"emailVerificationToken\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"emailVerificationToken\"",
+        "sql": "CREATE TABLE \"public\".\"emailVerificationToken\" (\n  \"consumedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"tokenHash\" text NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"emailVerificationToken\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.expense",
+    "label": "Create table \"expense\"",
+    "summary": "Creates table \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"expense\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"expense\"",
+        "sql": "CREATE TABLE \"public\".\"expense\" (\n  \"baseAmountMinor\" int8 NOT NULL,\n  \"baseCurrency\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMemberId\" text NOT NULL,\n  \"description\" text NOT NULL,\n  \"exchangeRateDenominator\" text,\n  \"exchangeRateNumerator\" text,\n  \"exchangeRateProvider\" text,\n  \"exchangeRateQuotedAt\" timestamptz,\n  \"groupId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"originalAmountMinor\" int8 NOT NULL,\n  \"originalCurrency\" text NOT NULL,\n  \"paidByMemberId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"expense\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.expenseGroup",
+    "label": "Create table \"expenseGroup\"",
+    "summary": "Creates table \"expenseGroup\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "expenseGroup"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"expenseGroup\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroup\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"expenseGroup\"",
+        "sql": "CREATE TABLE \"public\".\"expenseGroup\" (\n  \"baseCurrency\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByIdentityId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"expenseGroup_status_check_91fcbd87\" CHECK (\"status\" IN ('PENDING', 'ACTIVE', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"expenseGroup\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroup\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.expenseGroupInvitation",
+    "label": "Create table \"expenseGroupInvitation\"",
+    "summary": "Creates table \"expenseGroupInvitation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"expenseGroupInvitation\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"expenseGroupInvitation\"",
+        "sql": "CREATE TABLE \"public\".\"expenseGroupInvitation\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expenseGroupId\" text NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"inviteeId\" text NOT NULL,\n  \"inviterId\" text NOT NULL,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"expenseGroupInvitation_status_check_d85c7349\" CHECK (\"status\" IN ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"expenseGroupInvitation\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.expenseParticipant",
+    "label": "Create table \"expenseParticipant\"",
+    "summary": "Creates table \"expenseParticipant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "expenseParticipant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"expenseParticipant\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"expenseParticipant\"",
+        "sql": "CREATE TABLE \"public\".\"expenseParticipant\" (\n  \"amountMinor\" int8 NOT NULL,\n  \"expenseId\" text NOT NULL,\n  \"groupId\" text NOT NULL,\n  \"memberId\" text NOT NULL,\n  PRIMARY KEY (\"expenseId\", \"memberId\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"expenseParticipant\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.externalIdentity",
+    "label": "Create table \"externalIdentity\"",
+    "summary": "Creates table \"externalIdentity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "externalIdentity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"externalIdentity\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"externalIdentity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"externalIdentity\"",
+        "sql": "CREATE TABLE \"public\".\"externalIdentity\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"provider\" text NOT NULL,\n  \"providerUserId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" text NOT NULL\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"externalIdentity\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"externalIdentity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.member",
+    "label": "Create table \"member\"",
+    "summary": "Creates table \"member\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "member"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"member\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"member\"",
+        "sql": "CREATE TABLE \"public\".\"member\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"endedAt\" timestamptz,\n  \"groupId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"identityId\" text NOT NULL,\n  \"joinedAt\" timestamptz,\n  \"status\" text DEFAULT 'INVITED' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"member_status_check_978abec9\" CHECK (\"status\" IN ('INVITED', 'ACTIVE', 'LEFT', 'DECLINED', 'EXPIRED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"member\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.oAuthTransaction",
+    "label": "Create table \"oAuthTransaction\"",
+    "summary": "Creates table \"oAuthTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "oAuthTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"oAuthTransaction\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthTransaction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"oAuthTransaction\"",
+        "sql": "CREATE TABLE \"public\".\"oAuthTransaction\" (\n  \"browserBindingHash\" text NOT NULL,\n  \"codeVerifier\" text NOT NULL,\n  \"consumedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"provider\" text NOT NULL,\n  \"purpose\" text NOT NULL,\n  \"stateHash\" text NOT NULL,\n  \"userId\" text,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"oAuthTransaction\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthTransaction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.outboxEvent",
+    "label": "Create table \"outboxEvent\"",
+    "summary": "Creates table \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"outboxEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"outboxEvent\"",
+        "sql": "CREATE TABLE \"public\".\"outboxEvent\" (\n  \"aggregateId\" text NOT NULL,\n  \"aggregateType\" text NOT NULL,\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"lastError\" text,\n  \"leaseOwner\" text,\n  \"leaseUntil\" timestamptz,\n  \"nextAttemptAt\" timestamptz,\n  \"occurredAt\" timestamptz NOT NULL,\n  \"payload\" json NOT NULL,\n  \"publishedAt\" timestamptz,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"outboxEvent_status_check_a1492ded\" CHECK (\"status\" IN ('PENDING', 'PROCESSED', 'DEAD_LETTER'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"outboxEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.refreshToken",
+    "label": "Create table \"refreshToken\"",
+    "summary": "Creates table \"refreshToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "refreshToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"refreshToken\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"refreshToken\"",
+        "sql": "CREATE TABLE \"public\".\"refreshToken\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"familyId\" text NOT NULL,\n  \"generation\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"parentId\" text,\n  \"replacedById\" text,\n  \"revoked\" bool DEFAULT false NOT NULL,\n  \"revokedAt\" timestamptz,\n  \"revokedReason\" text,\n  \"tokenHash\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"refreshToken_revokedReason_check_9e2303fc\" CHECK (\"revokedReason\" IN ('ROTATED', 'LOGOUT', 'REUSE_DETECTED', 'PASSWORD_CHANGED', 'SECURITY_EVENT'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"refreshToken\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.refreshTokenFamily",
+    "label": "Create table \"refreshTokenFamily\"",
+    "summary": "Creates table \"refreshTokenFamily\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "refreshTokenFamily"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"refreshTokenFamily\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshTokenFamily\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"refreshTokenFamily\"",
+        "sql": "CREATE TABLE \"public\".\"refreshTokenFamily\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"revokedAt\" timestamptz,\n  \"revokedReason\" text,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"refreshTokenFamily_revokedReason_check_9e2303fc\" CHECK (\"revokedReason\" IN ('ROTATED', 'LOGOUT', 'REUSE_DETECTED', 'PASSWORD_CHANGED', 'SECURITY_EVENT'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"refreshTokenFamily\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshTokenFamily\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user",
+    "label": "Create table \"user\"",
+    "summary": "Creates table \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user\"",
+        "sql": "CREATE TABLE \"public\".\"user\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"emailVerifiedAt\" timestamptz,\n  \"id\" text NOT NULL,\n  \"name\" text,\n  \"passwordHash\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.emailVerificationToken.emailVerificationToken_tokenHash_key",
+    "label": "Add unique constraint on \"emailVerificationToken\" (tokenHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "emailVerificationToken_tokenHash_key",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"emailVerificationToken_tokenHash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_tokenHash_key",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"emailVerificationToken_tokenHash_key\"",
+        "sql": "ALTER TABLE \"public\".\"emailVerificationToken\" ADD CONSTRAINT \"emailVerificationToken_tokenHash_key\" UNIQUE (\"tokenHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"emailVerificationToken_tokenHash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_tokenHash_key",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.expense.expense_id_groupId_key",
+    "label": "Add unique constraint on \"expense\" (id, groupId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "expense_id_groupId_key",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"expense_id_groupId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_id_groupId_key",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"expense_id_groupId_key\"",
+        "sql": "ALTER TABLE \"public\".\"expense\" ADD CONSTRAINT \"expense_id_groupId_key\" UNIQUE (\"id\", \"groupId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"expense_id_groupId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_id_groupId_key",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.expenseGroupInvitation.expenseGroupInvitation_expenseGroupId_inviteeId_key",
+    "label": "Add unique constraint on \"expenseGroupInvitation\" (expenseGroupId, inviteeId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "expenseGroupInvitation_expenseGroupId_inviteeId_key",
+        "table": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"expenseGroupInvitation_expenseGroupId_inviteeId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_expenseGroupId_inviteeId_key",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"expenseGroupInvitation_expenseGroupId_inviteeId_key\"",
+        "sql": "ALTER TABLE \"public\".\"expenseGroupInvitation\" ADD CONSTRAINT \"expenseGroupInvitation_expenseGroupId_inviteeId_key\" UNIQUE (\"expenseGroupId\", \"inviteeId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"expenseGroupInvitation_expenseGroupId_inviteeId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_expenseGroupId_inviteeId_key",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.externalIdentity.provider_providerUserId",
+    "label": "Add unique constraint on \"externalIdentity\" (provider, providerUserId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "provider_providerUserId",
+        "table": "externalIdentity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"provider_providerUserId\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "provider_providerUserId",
+          "public",
+          "\"public\".\"externalIdentity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"provider_providerUserId\"",
+        "sql": "ALTER TABLE \"public\".\"externalIdentity\" ADD CONSTRAINT \"provider_providerUserId\" UNIQUE (\"provider\", \"providerUserId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"provider_providerUserId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "provider_providerUserId",
+          "public",
+          "\"public\".\"externalIdentity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.member.member_id_groupId_key",
+    "label": "Add unique constraint on \"member\" (id, groupId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "member_id_groupId_key",
+        "table": "member"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"member_id_groupId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_id_groupId_key",
+          "public",
+          "\"public\".\"member\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"member_id_groupId_key\"",
+        "sql": "ALTER TABLE \"public\".\"member\" ADD CONSTRAINT \"member_id_groupId_key\" UNIQUE (\"id\", \"groupId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"member_id_groupId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_id_groupId_key",
+          "public",
+          "\"public\".\"member\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.oAuthTransaction.oAuthTransaction_stateHash_key",
+    "label": "Add unique constraint on \"oAuthTransaction\" (stateHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "oAuthTransaction_stateHash_key",
+        "table": "oAuthTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"oAuthTransaction_stateHash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oAuthTransaction_stateHash_key",
+          "public",
+          "\"public\".\"oAuthTransaction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"oAuthTransaction_stateHash_key\"",
+        "sql": "ALTER TABLE \"public\".\"oAuthTransaction\" ADD CONSTRAINT \"oAuthTransaction_stateHash_key\" UNIQUE (\"stateHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"oAuthTransaction_stateHash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "oAuthTransaction_stateHash_key",
+          "public",
+          "\"public\".\"oAuthTransaction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.refreshToken.refreshToken_tokenHash_key",
+    "label": "Add unique constraint on \"refreshToken\" (tokenHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "refreshToken_tokenHash_key",
+        "table": "refreshToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"refreshToken_tokenHash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshToken_tokenHash_key",
+          "public",
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"refreshToken_tokenHash_key\"",
+        "sql": "ALTER TABLE \"public\".\"refreshToken\" ADD CONSTRAINT \"refreshToken_tokenHash_key\" UNIQUE (\"tokenHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"refreshToken_tokenHash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshToken_tokenHash_key",
+          "public",
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.refreshToken.refreshToken_familyId_generation_key",
+    "label": "Add unique constraint on \"refreshToken\" (familyId, generation)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "refreshToken_familyId_generation_key",
+        "table": "refreshToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"refreshToken_familyId_generation_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshToken_familyId_generation_key",
+          "public",
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"refreshToken_familyId_generation_key\"",
+        "sql": "ALTER TABLE \"public\".\"refreshToken\" ADD CONSTRAINT \"refreshToken_familyId_generation_key\" UNIQUE (\"familyId\", \"generation\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"refreshToken_familyId_generation_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshToken_familyId_generation_key",
+          "public",
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_email_key",
+    "label": "Add unique constraint on \"user\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_email_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.emailVerificationToken.emailVerificationToken_expiresAt_idx_6b6b8c10",
+    "label": "Create index \"emailVerificationToken_expiresAt_idx_6b6b8c10\" on \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "emailVerificationToken_expiresAt_idx_6b6b8c10",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"emailVerificationToken_expiresAt_idx_6b6b8c10\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"emailVerificationToken_expiresAt_idx_6b6b8c10\"",
+        "sql": "CREATE INDEX \"emailVerificationToken_expiresAt_idx_6b6b8c10\" ON \"public\".\"emailVerificationToken\" (\"expiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"emailVerificationToken_expiresAt_idx_6b6b8c10\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.emailVerificationToken.emailVerificationToken_userId_consumedAt_idx_f20d882c",
+    "label": "Create index \"emailVerificationToken_userId_consumedAt_idx_f20d882c\" on \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "emailVerificationToken_userId_consumedAt_idx_f20d882c",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"emailVerificationToken_userId_consumedAt_idx_f20d882c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_userId_consumedAt_idx_f20d882c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"emailVerificationToken_userId_consumedAt_idx_f20d882c\"",
+        "sql": "CREATE INDEX \"emailVerificationToken_userId_consumedAt_idx_f20d882c\" ON \"public\".\"emailVerificationToken\" (\"userId\", \"consumedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"emailVerificationToken_userId_consumedAt_idx_f20d882c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_userId_consumedAt_idx_f20d882c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.emailVerificationToken.emailVerificationToken_userId_idx_a489d58a",
+    "label": "Create index \"emailVerificationToken_userId_idx_a489d58a\" on \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "emailVerificationToken_userId_idx_a489d58a",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"emailVerificationToken_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"emailVerificationToken_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"emailVerificationToken_userId_idx_a489d58a\" ON \"public\".\"emailVerificationToken\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"emailVerificationToken_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailVerificationToken_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expense.expense_createdByMemberId_groupId_idx_4f383860",
+    "label": "Create index \"expense_createdByMemberId_groupId_idx_4f383860\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expense_createdByMemberId_groupId_idx_4f383860",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expense_createdByMemberId_groupId_idx_4f383860\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_createdByMemberId_groupId_idx_4f383860\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expense_createdByMemberId_groupId_idx_4f383860\"",
+        "sql": "CREATE INDEX \"expense_createdByMemberId_groupId_idx_4f383860\" ON \"public\".\"expense\" (\"createdByMemberId\", \"groupId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expense_createdByMemberId_groupId_idx_4f383860\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_createdByMemberId_groupId_idx_4f383860\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expense.expense_createdByMemberId_idx_24edab95",
+    "label": "Create index \"expense_createdByMemberId_idx_24edab95\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expense_createdByMemberId_idx_24edab95",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expense_createdByMemberId_idx_24edab95\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_createdByMemberId_idx_24edab95\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expense_createdByMemberId_idx_24edab95\"",
+        "sql": "CREATE INDEX \"expense_createdByMemberId_idx_24edab95\" ON \"public\".\"expense\" (\"createdByMemberId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expense_createdByMemberId_idx_24edab95\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_createdByMemberId_idx_24edab95\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expense.expense_groupId_createdAt_idx_bac1e421",
+    "label": "Create index \"expense_groupId_createdAt_idx_bac1e421\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expense_groupId_createdAt_idx_bac1e421",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expense_groupId_createdAt_idx_bac1e421\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_groupId_createdAt_idx_bac1e421\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expense_groupId_createdAt_idx_bac1e421\"",
+        "sql": "CREATE INDEX \"expense_groupId_createdAt_idx_bac1e421\" ON \"public\".\"expense\" (\"groupId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expense_groupId_createdAt_idx_bac1e421\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_groupId_createdAt_idx_bac1e421\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expense.expense_groupId_idx_e2fb5578",
+    "label": "Create index \"expense_groupId_idx_e2fb5578\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expense_groupId_idx_e2fb5578",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expense_groupId_idx_e2fb5578\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_groupId_idx_e2fb5578\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expense_groupId_idx_e2fb5578\"",
+        "sql": "CREATE INDEX \"expense_groupId_idx_e2fb5578\" ON \"public\".\"expense\" (\"groupId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expense_groupId_idx_e2fb5578\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_groupId_idx_e2fb5578\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expense.expense_paidByMemberId_groupId_idx_973e4146",
+    "label": "Create index \"expense_paidByMemberId_groupId_idx_973e4146\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expense_paidByMemberId_groupId_idx_973e4146",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expense_paidByMemberId_groupId_idx_973e4146\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_paidByMemberId_groupId_idx_973e4146\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expense_paidByMemberId_groupId_idx_973e4146\"",
+        "sql": "CREATE INDEX \"expense_paidByMemberId_groupId_idx_973e4146\" ON \"public\".\"expense\" (\"paidByMemberId\", \"groupId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expense_paidByMemberId_groupId_idx_973e4146\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_paidByMemberId_groupId_idx_973e4146\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expense.expense_paidByMemberId_idx_e98587e6",
+    "label": "Create index \"expense_paidByMemberId_idx_e98587e6\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expense_paidByMemberId_idx_e98587e6",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expense_paidByMemberId_idx_e98587e6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_paidByMemberId_idx_e98587e6\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expense_paidByMemberId_idx_e98587e6\"",
+        "sql": "CREATE INDEX \"expense_paidByMemberId_idx_e98587e6\" ON \"public\".\"expense\" (\"paidByMemberId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expense_paidByMemberId_idx_e98587e6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expense_paidByMemberId_idx_e98587e6\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expenseGroupInvitation.expenseGroupInvitation_expenseGroupId_idx_98e4d394",
+    "label": "Create index \"expenseGroupInvitation_expenseGroupId_idx_98e4d394\" on \"expenseGroupInvitation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expenseGroupInvitation_expenseGroupId_idx_98e4d394",
+        "table": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expenseGroupInvitation_expenseGroupId_idx_98e4d394\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation_expenseGroupId_idx_98e4d394\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expenseGroupInvitation_expenseGroupId_idx_98e4d394\"",
+        "sql": "CREATE INDEX \"expenseGroupInvitation_expenseGroupId_idx_98e4d394\" ON \"public\".\"expenseGroupInvitation\" (\"expenseGroupId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expenseGroupInvitation_expenseGroupId_idx_98e4d394\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation_expenseGroupId_idx_98e4d394\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expenseGroupInvitation.expenseGroupInvitation_inviteeId_idx_3a8b78f7",
+    "label": "Create index \"expenseGroupInvitation_inviteeId_idx_3a8b78f7\" on \"expenseGroupInvitation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expenseGroupInvitation_inviteeId_idx_3a8b78f7",
+        "table": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expenseGroupInvitation_inviteeId_idx_3a8b78f7\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation_inviteeId_idx_3a8b78f7\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expenseGroupInvitation_inviteeId_idx_3a8b78f7\"",
+        "sql": "CREATE INDEX \"expenseGroupInvitation_inviteeId_idx_3a8b78f7\" ON \"public\".\"expenseGroupInvitation\" (\"inviteeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expenseGroupInvitation_inviteeId_idx_3a8b78f7\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation_inviteeId_idx_3a8b78f7\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expenseGroupInvitation.expenseGroupInvitation_inviterId_idx_c2d8c6d6",
+    "label": "Create index \"expenseGroupInvitation_inviterId_idx_c2d8c6d6\" on \"expenseGroupInvitation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expenseGroupInvitation_inviterId_idx_c2d8c6d6",
+        "table": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expenseGroupInvitation_inviterId_idx_c2d8c6d6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation_inviterId_idx_c2d8c6d6\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expenseGroupInvitation_inviterId_idx_c2d8c6d6\"",
+        "sql": "CREATE INDEX \"expenseGroupInvitation_inviterId_idx_c2d8c6d6\" ON \"public\".\"expenseGroupInvitation\" (\"inviterId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expenseGroupInvitation_inviterId_idx_c2d8c6d6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseGroupInvitation_inviterId_idx_c2d8c6d6\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expenseParticipant.expenseParticipant_expenseId_groupId_idx_0eadd446",
+    "label": "Create index \"expenseParticipant_expenseId_groupId_idx_0eadd446\" on \"expenseParticipant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expenseParticipant_expenseId_groupId_idx_0eadd446",
+        "table": "expenseParticipant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expenseParticipant_expenseId_groupId_idx_0eadd446\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_expenseId_groupId_idx_0eadd446\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expenseParticipant_expenseId_groupId_idx_0eadd446\"",
+        "sql": "CREATE INDEX \"expenseParticipant_expenseId_groupId_idx_0eadd446\" ON \"public\".\"expenseParticipant\" (\"expenseId\", \"groupId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expenseParticipant_expenseId_groupId_idx_0eadd446\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_expenseId_groupId_idx_0eadd446\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expenseParticipant.expenseParticipant_groupId_memberId_idx_d2a4bf87",
+    "label": "Create index \"expenseParticipant_groupId_memberId_idx_d2a4bf87\" on \"expenseParticipant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expenseParticipant_groupId_memberId_idx_d2a4bf87",
+        "table": "expenseParticipant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expenseParticipant_groupId_memberId_idx_d2a4bf87\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_groupId_memberId_idx_d2a4bf87\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expenseParticipant_groupId_memberId_idx_d2a4bf87\"",
+        "sql": "CREATE INDEX \"expenseParticipant_groupId_memberId_idx_d2a4bf87\" ON \"public\".\"expenseParticipant\" (\"groupId\", \"memberId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expenseParticipant_groupId_memberId_idx_d2a4bf87\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_groupId_memberId_idx_d2a4bf87\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expenseParticipant.expenseParticipant_memberId_expenseId_idx_c77d8ab6",
+    "label": "Create index \"expenseParticipant_memberId_expenseId_idx_c77d8ab6\" on \"expenseParticipant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expenseParticipant_memberId_expenseId_idx_c77d8ab6",
+        "table": "expenseParticipant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expenseParticipant_memberId_expenseId_idx_c77d8ab6\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_memberId_expenseId_idx_c77d8ab6\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expenseParticipant_memberId_expenseId_idx_c77d8ab6\"",
+        "sql": "CREATE INDEX \"expenseParticipant_memberId_expenseId_idx_c77d8ab6\" ON \"public\".\"expenseParticipant\" (\"memberId\", \"expenseId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expenseParticipant_memberId_expenseId_idx_c77d8ab6\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_memberId_expenseId_idx_c77d8ab6\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.expenseParticipant.expenseParticipant_memberId_groupId_idx_26965ae1",
+    "label": "Create index \"expenseParticipant_memberId_groupId_idx_26965ae1\" on \"expenseParticipant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "expenseParticipant_memberId_groupId_idx_26965ae1",
+        "table": "expenseParticipant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"expenseParticipant_memberId_groupId_idx_26965ae1\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_memberId_groupId_idx_26965ae1\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"expenseParticipant_memberId_groupId_idx_26965ae1\"",
+        "sql": "CREATE INDEX \"expenseParticipant_memberId_groupId_idx_26965ae1\" ON \"public\".\"expenseParticipant\" (\"memberId\", \"groupId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"expenseParticipant_memberId_groupId_idx_26965ae1\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"expenseParticipant_memberId_groupId_idx_26965ae1\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.externalIdentity.externalIdentity_userId_idx_a489d58a",
+    "label": "Create index \"externalIdentity_userId_idx_a489d58a\" on \"externalIdentity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "externalIdentity_userId_idx_a489d58a",
+        "table": "externalIdentity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"externalIdentity_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"externalIdentity_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"externalIdentity_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"externalIdentity_userId_idx_a489d58a\" ON \"public\".\"externalIdentity\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"externalIdentity_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"externalIdentity_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.member.member_groupId_idx_e2fb5578",
+    "label": "Create index \"member_groupId_idx_e2fb5578\" on \"member\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "member_groupId_idx_e2fb5578",
+        "table": "member"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"member_groupId_idx_e2fb5578\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member_groupId_idx_e2fb5578\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"member_groupId_idx_e2fb5578\"",
+        "sql": "CREATE INDEX \"member_groupId_idx_e2fb5578\" ON \"public\".\"member\" (\"groupId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"member_groupId_idx_e2fb5578\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member_groupId_idx_e2fb5578\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.member.member_identityId_groupId_status_idx_99208072",
+    "label": "Create index \"member_identityId_groupId_status_idx_99208072\" on \"member\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "member_identityId_groupId_status_idx_99208072",
+        "table": "member"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"member_identityId_groupId_status_idx_99208072\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member_identityId_groupId_status_idx_99208072\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"member_identityId_groupId_status_idx_99208072\"",
+        "sql": "CREATE INDEX \"member_identityId_groupId_status_idx_99208072\" ON \"public\".\"member\" (\"identityId\", \"groupId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"member_identityId_groupId_status_idx_99208072\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"member_identityId_groupId_status_idx_99208072\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.oAuthTransaction.oAuthTransaction_expiresAt_idx_6b6b8c10",
+    "label": "Create index \"oAuthTransaction_expiresAt_idx_6b6b8c10\" on \"oAuthTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "oAuthTransaction_expiresAt_idx_6b6b8c10",
+        "table": "oAuthTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"oAuthTransaction_expiresAt_idx_6b6b8c10\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthTransaction_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"oAuthTransaction_expiresAt_idx_6b6b8c10\"",
+        "sql": "CREATE INDEX \"oAuthTransaction_expiresAt_idx_6b6b8c10\" ON \"public\".\"oAuthTransaction\" (\"expiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"oAuthTransaction_expiresAt_idx_6b6b8c10\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthTransaction_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.oAuthTransaction.oAuthTransaction_userId_idx_a489d58a",
+    "label": "Create index \"oAuthTransaction_userId_idx_a489d58a\" on \"oAuthTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "oAuthTransaction_userId_idx_a489d58a",
+        "table": "oAuthTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"oAuthTransaction_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthTransaction_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"oAuthTransaction_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"oAuthTransaction_userId_idx_a489d58a\" ON \"public\".\"oAuthTransaction\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"oAuthTransaction_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"oAuthTransaction_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxEvent.outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f",
+    "label": "Create index \"outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f\" on \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f",
+        "table": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f\"",
+        "sql": "CREATE INDEX \"outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f\" ON \"public\".\"outboxEvent\" (\"aggregateType\", \"aggregateId\", \"occurredAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_aggregateType_aggregateId_occurredAt_idx_c7f8430f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxEvent.outboxEvent_createdAt_idx_9575dbd7",
+    "label": "Create index \"outboxEvent_createdAt_idx_9575dbd7\" on \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxEvent_createdAt_idx_9575dbd7",
+        "table": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxEvent_createdAt_idx_9575dbd7\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_createdAt_idx_9575dbd7\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxEvent_createdAt_idx_9575dbd7\"",
+        "sql": "CREATE INDEX \"outboxEvent_createdAt_idx_9575dbd7\" ON \"public\".\"outboxEvent\" (\"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxEvent_createdAt_idx_9575dbd7\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_createdAt_idx_9575dbd7\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxEvent.outboxEvent_leaseUntil_idx_1fd0ae7c",
+    "label": "Create index \"outboxEvent_leaseUntil_idx_1fd0ae7c\" on \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxEvent_leaseUntil_idx_1fd0ae7c",
+        "table": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxEvent_leaseUntil_idx_1fd0ae7c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_leaseUntil_idx_1fd0ae7c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxEvent_leaseUntil_idx_1fd0ae7c\"",
+        "sql": "CREATE INDEX \"outboxEvent_leaseUntil_idx_1fd0ae7c\" ON \"public\".\"outboxEvent\" (\"leaseUntil\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxEvent_leaseUntil_idx_1fd0ae7c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_leaseUntil_idx_1fd0ae7c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.outboxEvent.outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b",
+    "label": "Create index \"outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b\" on \"outboxEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b",
+        "table": "outboxEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b\"",
+        "sql": "CREATE INDEX \"outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b\" ON \"public\".\"outboxEvent\" (\"status\", \"nextAttemptAt\", \"leaseUntil\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"outboxEvent_status_nextAttemptAt_leaseUntil_idx_c1c4107b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.refreshToken.refreshToken_familyId_idx_3d03045e",
+    "label": "Create index \"refreshToken_familyId_idx_3d03045e\" on \"refreshToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "refreshToken_familyId_idx_3d03045e",
+        "table": "refreshToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"refreshToken_familyId_idx_3d03045e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshToken_familyId_idx_3d03045e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"refreshToken_familyId_idx_3d03045e\"",
+        "sql": "CREATE INDEX \"refreshToken_familyId_idx_3d03045e\" ON \"public\".\"refreshToken\" (\"familyId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"refreshToken_familyId_idx_3d03045e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshToken_familyId_idx_3d03045e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.refreshTokenFamily.refreshTokenFamily_userId_idx_a489d58a",
+    "label": "Create index \"refreshTokenFamily_userId_idx_a489d58a\" on \"refreshTokenFamily\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "refreshTokenFamily_userId_idx_a489d58a",
+        "table": "refreshTokenFamily"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"refreshTokenFamily_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshTokenFamily_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"refreshTokenFamily_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"refreshTokenFamily_userId_idx_a489d58a\" ON \"public\".\"refreshTokenFamily\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"refreshTokenFamily_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshTokenFamily_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.refreshTokenFamily.refreshTokenFamily_userId_revokedAt_idx_eae4cbef",
+    "label": "Create index \"refreshTokenFamily_userId_revokedAt_idx_eae4cbef\" on \"refreshTokenFamily\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "refreshTokenFamily_userId_revokedAt_idx_eae4cbef",
+        "table": "refreshTokenFamily"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"refreshTokenFamily_userId_revokedAt_idx_eae4cbef\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshTokenFamily_userId_revokedAt_idx_eae4cbef\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"refreshTokenFamily_userId_revokedAt_idx_eae4cbef\"",
+        "sql": "CREATE INDEX \"refreshTokenFamily_userId_revokedAt_idx_eae4cbef\" ON \"public\".\"refreshTokenFamily\" (\"userId\", \"revokedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"refreshTokenFamily_userId_revokedAt_idx_eae4cbef\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"refreshTokenFamily_userId_revokedAt_idx_eae4cbef\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user.user_id_email_idx_ecc32872",
+    "label": "Create index \"user_id_email_idx_ecc32872\" on \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "user_id_email_idx_ecc32872",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_id_email_idx_ecc32872\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_id_email_idx_ecc32872\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_id_email_idx_ecc32872\"",
+        "sql": "CREATE INDEX \"user_id_email_idx_ecc32872\" ON \"public\".\"user\" (\"id\", \"email\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_id_email_idx_ecc32872\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_id_email_idx_ecc32872\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.emailVerificationToken.emailVerificationToken_userId_fkey",
+    "label": "Add foreign key \"emailVerificationToken_userId_fkey\" on \"emailVerificationToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "emailVerificationToken_userId_fkey",
+        "table": "emailVerificationToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"emailVerificationToken_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_userId_fkey",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"emailVerificationToken_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"emailVerificationToken\"\nADD CONSTRAINT \"emailVerificationToken_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"emailVerificationToken_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "emailVerificationToken_userId_fkey",
+          "public",
+          "\"public\".\"emailVerificationToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expense.expense_groupId_fkey",
+    "label": "Add foreign key \"expense_groupId_fkey\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expense_groupId_fkey",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expense_groupId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_groupId_fkey",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expense_groupId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expense\"\nADD CONSTRAINT \"expense_groupId_fkey\"\nFOREIGN KEY (\"groupId\")\nREFERENCES \"public\".\"expenseGroup\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expense_groupId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_groupId_fkey",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expense.expense_createdByMemberId_groupId_fkey",
+    "label": "Add foreign key \"expense_createdByMemberId_groupId_fkey\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expense_createdByMemberId_groupId_fkey",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expense_createdByMemberId_groupId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_createdByMemberId_groupId_fkey",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expense_createdByMemberId_groupId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expense\"\nADD CONSTRAINT \"expense_createdByMemberId_groupId_fkey\"\nFOREIGN KEY (\"createdByMemberId\", \"groupId\")\nREFERENCES \"public\".\"member\" (\"id\", \"groupId\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expense_createdByMemberId_groupId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_createdByMemberId_groupId_fkey",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expense.expense_paidByMemberId_groupId_fkey",
+    "label": "Add foreign key \"expense_paidByMemberId_groupId_fkey\" on \"expense\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expense_paidByMemberId_groupId_fkey",
+        "table": "expense"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expense_paidByMemberId_groupId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_paidByMemberId_groupId_fkey",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expense_paidByMemberId_groupId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expense\"\nADD CONSTRAINT \"expense_paidByMemberId_groupId_fkey\"\nFOREIGN KEY (\"paidByMemberId\", \"groupId\")\nREFERENCES \"public\".\"member\" (\"id\", \"groupId\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expense_paidByMemberId_groupId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expense_paidByMemberId_groupId_fkey",
+          "public",
+          "\"public\".\"expense\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expenseGroupInvitation.expenseGroupInvitation_expenseGroupId_fkey",
+    "label": "Add foreign key \"expenseGroupInvitation_expenseGroupId_fkey\" on \"expenseGroupInvitation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expenseGroupInvitation_expenseGroupId_fkey",
+        "table": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expenseGroupInvitation_expenseGroupId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_expenseGroupId_fkey",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expenseGroupInvitation_expenseGroupId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expenseGroupInvitation\"\nADD CONSTRAINT \"expenseGroupInvitation_expenseGroupId_fkey\"\nFOREIGN KEY (\"expenseGroupId\")\nREFERENCES \"public\".\"expenseGroup\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expenseGroupInvitation_expenseGroupId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_expenseGroupId_fkey",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expenseGroupInvitation.expenseGroupInvitation_inviterId_fkey",
+    "label": "Add foreign key \"expenseGroupInvitation_inviterId_fkey\" on \"expenseGroupInvitation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expenseGroupInvitation_inviterId_fkey",
+        "table": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expenseGroupInvitation_inviterId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_inviterId_fkey",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expenseGroupInvitation_inviterId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expenseGroupInvitation\"\nADD CONSTRAINT \"expenseGroupInvitation_inviterId_fkey\"\nFOREIGN KEY (\"inviterId\")\nREFERENCES \"public\".\"member\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expenseGroupInvitation_inviterId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_inviterId_fkey",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expenseGroupInvitation.expenseGroupInvitation_inviteeId_fkey",
+    "label": "Add foreign key \"expenseGroupInvitation_inviteeId_fkey\" on \"expenseGroupInvitation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expenseGroupInvitation_inviteeId_fkey",
+        "table": "expenseGroupInvitation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expenseGroupInvitation_inviteeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_inviteeId_fkey",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expenseGroupInvitation_inviteeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expenseGroupInvitation\"\nADD CONSTRAINT \"expenseGroupInvitation_inviteeId_fkey\"\nFOREIGN KEY (\"inviteeId\")\nREFERENCES \"public\".\"member\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expenseGroupInvitation_inviteeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseGroupInvitation_inviteeId_fkey",
+          "public",
+          "\"public\".\"expenseGroupInvitation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expenseParticipant.expenseParticipant_expenseId_groupId_fkey",
+    "label": "Add foreign key \"expenseParticipant_expenseId_groupId_fkey\" on \"expenseParticipant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expenseParticipant_expenseId_groupId_fkey",
+        "table": "expenseParticipant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expenseParticipant_expenseId_groupId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseParticipant_expenseId_groupId_fkey",
+          "public",
+          "\"public\".\"expenseParticipant\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expenseParticipant_expenseId_groupId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expenseParticipant\"\nADD CONSTRAINT \"expenseParticipant_expenseId_groupId_fkey\"\nFOREIGN KEY (\"expenseId\", \"groupId\")\nREFERENCES \"public\".\"expense\" (\"id\", \"groupId\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expenseParticipant_expenseId_groupId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseParticipant_expenseId_groupId_fkey",
+          "public",
+          "\"public\".\"expenseParticipant\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.expenseParticipant.expenseParticipant_memberId_groupId_fkey",
+    "label": "Add foreign key \"expenseParticipant_memberId_groupId_fkey\" on \"expenseParticipant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "expenseParticipant_memberId_groupId_fkey",
+        "table": "expenseParticipant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"expenseParticipant_memberId_groupId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseParticipant_memberId_groupId_fkey",
+          "public",
+          "\"public\".\"expenseParticipant\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"expenseParticipant_memberId_groupId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"expenseParticipant\"\nADD CONSTRAINT \"expenseParticipant_memberId_groupId_fkey\"\nFOREIGN KEY (\"memberId\", \"groupId\")\nREFERENCES \"public\".\"member\" (\"id\", \"groupId\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"expenseParticipant_memberId_groupId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "expenseParticipant_memberId_groupId_fkey",
+          "public",
+          "\"public\".\"expenseParticipant\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.externalIdentity.externalIdentity_userId_fkey",
+    "label": "Add foreign key \"externalIdentity_userId_fkey\" on \"externalIdentity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "externalIdentity_userId_fkey",
+        "table": "externalIdentity"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"externalIdentity_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "externalIdentity_userId_fkey",
+          "public",
+          "\"public\".\"externalIdentity\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"externalIdentity_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"externalIdentity\"\nADD CONSTRAINT \"externalIdentity_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"externalIdentity_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "externalIdentity_userId_fkey",
+          "public",
+          "\"public\".\"externalIdentity\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.member.member_groupId_fkey",
+    "label": "Add foreign key \"member_groupId_fkey\" on \"member\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "member_groupId_fkey",
+        "table": "member"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"member_groupId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_groupId_fkey",
+          "public",
+          "\"public\".\"member\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"member_groupId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"member\"\nADD CONSTRAINT \"member_groupId_fkey\"\nFOREIGN KEY (\"groupId\")\nREFERENCES \"public\".\"expenseGroup\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"member_groupId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "member_groupId_fkey",
+          "public",
+          "\"public\".\"member\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.refreshToken.refreshToken_familyId_fkey",
+    "label": "Add foreign key \"refreshToken_familyId_fkey\" on \"refreshToken\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "refreshToken_familyId_fkey",
+        "table": "refreshToken"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"refreshToken_familyId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshToken_familyId_fkey",
+          "public",
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"refreshToken_familyId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"refreshToken\"\nADD CONSTRAINT \"refreshToken_familyId_fkey\"\nFOREIGN KEY (\"familyId\")\nREFERENCES \"public\".\"refreshTokenFamily\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"refreshToken_familyId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshToken_familyId_fkey",
+          "public",
+          "\"public\".\"refreshToken\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.refreshTokenFamily.refreshTokenFamily_userId_fkey",
+    "label": "Add foreign key \"refreshTokenFamily_userId_fkey\" on \"refreshTokenFamily\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "refreshTokenFamily_userId_fkey",
+        "table": "refreshTokenFamily"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"refreshTokenFamily_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshTokenFamily_userId_fkey",
+          "public",
+          "\"public\".\"refreshTokenFamily\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"refreshTokenFamily_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"refreshTokenFamily\"\nADD CONSTRAINT \"refreshTokenFamily_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"refreshTokenFamily_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refreshTokenFamily_userId_fkey",
+          "public",
+          "\"public\".\"refreshTokenFamily\""
+        ]
+      }
+    ]
+  }
+]
