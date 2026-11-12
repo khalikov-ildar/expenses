@@ -110,6 +110,10 @@ describe('Expense', () => {
   test('requires a matching exchange-rate snapshot for a cross-currency expense', () => {
     const originalAmount = Money.fromMinorUnits(1_000n, usd);
     const baseAmount = Money.fromMinorUnits(920n, eur);
+    const participants = [
+      { memberId: participantA, amountMinor: 500n },
+      { memberId: participantB, amountMinor: 420n },
+    ];
     const matchingRate = ExchangeRate.create({
       from: usd,
       to: eur,
@@ -123,6 +127,7 @@ describe('Expense', () => {
       createExpense({
         originalAmount,
         baseAmount,
+        participants,
         exchangeRate: null,
       }),
     ).toThrow();
@@ -131,6 +136,7 @@ describe('Expense', () => {
       createExpense({
         originalAmount,
         baseAmount,
+        participants,
         exchangeRate: ExchangeRate.create({
           from: usd,
           to: Currency.create('GBP'),
@@ -142,7 +148,7 @@ describe('Expense', () => {
       }),
     ).toThrow();
 
-    expect(() => createExpense({ originalAmount, baseAmount, exchangeRate: matchingRate })).not.toThrow();
+    expect(() => createExpense({ originalAmount, baseAmount, participants, exchangeRate: matchingRate })).not.toThrow();
   });
 
   test('rejects an exchange-rate snapshot for a same-currency expense', () => {
