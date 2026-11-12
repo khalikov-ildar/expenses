@@ -1,3 +1,4 @@
+import type { Clock } from '@/shared/domain/clock.js';
 import { RefreshToken, RefreshTokenIdFactory } from './refresh-token.js';
 import { RefreshTokenPolicy } from './refresh-token.policy.js';
 import {
@@ -8,7 +9,12 @@ import {
 
 describe('RefreshTokenPolicy', () => {
   const now = new Date('2026-09-18T00:00:00.000Z');
-  const clock = { now: () => new Date(now) };
+  const clock = {
+    now: () => new Date(now),
+    nowInMs: () => now.getTime(),
+    fromMs: (ms: number) => new Date(ms),
+    after: (ms: number) => new Date(now.getTime() + ms),
+  } satisfies Clock;
 
   function createFamily(expiresAt = new Date('2026-12-17T00:00:00.000Z')) {
     return RefreshTokenFamily.create(

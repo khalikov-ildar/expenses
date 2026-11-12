@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import type { Clock } from '@/shared/domain/clock.js';
 import { OAuthTransactionPurposes } from '../oauth/oauth-transaction.js';
 import { OAuthTransactionService } from './oauth-transaction.service.js';
 
@@ -12,11 +13,16 @@ describe('OAuthTransactionService', () => {
       create: vitest.fn().mockResolvedValue(undefined),
       consume: vitest.fn().mockResolvedValue(consumed),
     };
-    const clock = { after: (duration: number) => new Date(now.getTime() + duration) };
+    const clock = {
+      now: () => new Date(now),
+      nowInMs: () => now.getTime(),
+      fromMs: (ms: number) => new Date(ms),
+      after: (duration: number) => new Date(now.getTime() + duration),
+    } satisfies Clock;
     const service = new OAuthTransactionService(
       repository as any,
       { oauthStateTtl: stateTtl } as any,
-      clock as any,
+      clock,
     );
 
     return { service, repository };

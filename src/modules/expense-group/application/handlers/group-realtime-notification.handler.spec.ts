@@ -115,7 +115,7 @@ describe('GroupRealtimeNotificationHandler', () => {
   });
 
   test('notifies only the inviter when an invitation is rejected', async () => {
-    const { handler, notifications, memberRepo } = createHandler();
+    const { handler, notifications } = createHandler();
 
     await handler.rejected(event('group-invitation.rejected'));
 
@@ -168,7 +168,7 @@ describe('GroupRealtimeNotificationHandler', () => {
   });
 
   test('notifies other active group members when an expense is created', async () => {
-    const { handler, expenseRepo, memberRepo, notifications } = createHandler();
+    const { handler, memberRepo, notifications } = createHandler()
     memberRepo.getActiveByGroupId.mockResolvedValue([
       { id: 'member-inviter', identityId: 'user-inviter' },
       { id: 'member-invitee', identityId: 'user-invitee' },

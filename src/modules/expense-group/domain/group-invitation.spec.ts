@@ -1,3 +1,4 @@
+import type { Clock } from '@/shared/domain/clock.js';
 import { ExpenseGroupIdFactory } from './expense-group.js';
 import {
   GroupInvitation,
@@ -16,7 +17,12 @@ describe('GroupInvitation', () => {
   const now = new Date('2026-11-12T10:00:00.000Z');
 
   function setup(expiresAt = new Date('2026-11-13T10:00:00.000Z')) {
-    const clock = { now: () => new Date(now) };
+    const clock = {
+      now: () => new Date(now),
+      nowInMs: () => now.getTime(),
+      fromMs: (ms: number) => new Date(ms),
+      after: (ms: number) => new Date(now.getTime() + ms),
+    } satisfies Clock;
     const id = GroupInvitationIdFactory.create('invitation-1');
     const inviteeId = GroupMemberIdFactory.create('member-invitee');
     const invitation = GroupInvitation.create(
@@ -27,7 +33,7 @@ describe('GroupInvitation', () => {
         groupId: ExpenseGroupIdFactory.create('group-1'),
         expiresAt,
       },
-      clock as any,
+      clock,
     );
 
     invitation.pullDomainEvents();
@@ -40,7 +46,7 @@ describe('GroupInvitation', () => {
   ] as const)('records the %s decision and its domain event', (decision, eventType) => {
     const { invitation, inviteeId, clock } = setup();
 
-    invitation.decide(decision as GroupInvitationDecision, inviteeId, clock as any);
+    invitation.decide(decision as GroupInvitationDecision, inviteeId, clock);
 
     expect(invitation.status).toBe(decision);
     expect(invitation.pullDomainEvents()).toEqual([
@@ -55,7 +61,7 @@ describe('GroupInvitation', () => {
   test('rejects a decision at the expiry instant without changing the invitation', () => {
     const { invitation, inviteeId, clock } = setup(now);
 
-    expect(() => invitation.decide(GroupInvitationStatus.ACCEPTED, inviteeId, clock as any)).toThrow();
+    expect(() => invitation.decide(GroupInvitationStatus.ACCEPTED, inviteeId, clock)).toThrow();
     expect(invitation.status).toBe(GroupInvitationStatus.PENDING);
     expect(invitation.pullDomainEvents()).toEqual([]);
   });
@@ -67,7 +73,7 @@ describe('GroupInvitation', () => {
       invitation.decide(
         GroupInvitationStatus.ACCEPTED,
         GroupMemberIdFactory.create('another-member'),
-        clock as any,
+        clock,
       ),
     ).toThrow();
     expect(invitation.status).toBe(GroupInvitationStatus.PENDING);
@@ -76,10 +82,10 @@ describe('GroupInvitation', () => {
 
   test('does not allow a second decision after the invitation has been decided', () => {
     const { invitation, inviteeId, clock } = setup();
-    invitation.decide(GroupInvitationStatus.ACCEPTED, inviteeId, clock as any);
+    invitation.decide(GroupInvitationStatus.ACCEPTED, inviteeId, clock);
     invitation.pullDomainEvents();
 
-    expect(() => invitation.decide(GroupInvitationStatus.REJECTED, inviteeId, clock as any)).toThrow();
+    expect(() => invitation.decide(GroupInvitationStatus.REJECTED, inviteeId, clock)).toThrow();
     expect(invitation.status).toBe(GroupInvitationStatus.ACCEPTED);
     expect(invitation.pullDomainEvents()).toEqual([]);
   });
@@ -87,7 +93,7 @@ describe('GroupInvitation', () => {
   test('expires a pending invitation and emits one expiry event', () => {
     const { invitation, clock } = setup();
 
-    invitation.expire(clock as any);
+    invitation.expire(clock);
 
     expect(invitation.status).toBe(GroupInvitationStatus.EXPIRED);
     expect(invitation.pullDomainEvents()).toEqual([
@@ -101,10 +107,10 @@ describe('GroupInvitation', () => {
 
   test('does not expire an invitation more than once', () => {
     const { invitation, clock } = setup();
-    invitation.expire(clock as any);
+    invitation.expire(clock);
     invitation.pullDomainEvents();
 
-    expect(() => invitation.expire(clock as any)).toThrow();
+    expect(() => invitation.expire(clock)).toThrow();
     expect(invitation.status).toBe(GroupInvitationStatus.EXPIRED);
     expect(invitation.pullDomainEvents()).toEqual([]);
   });

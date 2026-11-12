@@ -1,3 +1,4 @@
+import type { Clock } from '@/shared/domain/clock.js';
 import { ExpenseGroupIdFactory } from './expense-group.js';
 import {
   ExpenseGroupMember,
@@ -9,7 +10,12 @@ import { GroupInvitationStatus } from './group-invitation.js';
 
 describe('ExpenseGroupMember', () => {
   const now = new Date('2026-11-12T10:00:00.000Z');
-  const clock = { now: () => new Date(now) };
+  const clock = {
+    now: () => new Date(now),
+    nowInMs: () => now.getTime(),
+    fromMs: (ms: number) => new Date(ms),
+    after: (ms: number) => new Date(now.getTime() + ms),
+  } satisfies Clock;
 
   function createActiveMember() {
     const id = GroupMemberIdFactory.create('member-1');
@@ -25,7 +31,7 @@ describe('ExpenseGroupMember', () => {
   test('exposes its identity and records a leave event when an active member leaves', () => {
     const { member, id } = createActiveMember();
 
-    member.leave(clock as any);
+    member.leave(clock);
 
     expect(member.id).toBe(id);
     expect(member.status).toBe(GroupMemberStatus.LEFT);
@@ -42,10 +48,10 @@ describe('ExpenseGroupMember', () => {
 
   test('does not allow a member to leave a group twice', () => {
     const member = createActiveMember().member;
-    member.leave(clock as any);
+    member.leave(clock);
     member.pullDomainEvents();
 
-    expect(() => member.leave(clock as any)).toThrow();
+    expect(() => member.leave(clock)).toThrow();
     expect(member.status).toBe(GroupMemberStatus.LEFT);
     expect(member.pullDomainEvents()).toEqual([]);
   });
@@ -57,7 +63,7 @@ describe('ExpenseGroupMember', () => {
       ExpenseGroupIdFactory.create('group-1'),
     );
 
-    member.decideInvitation(GroupInvitationStatus.ACCEPTED, clock as any);
+    member.decideInvitation(GroupInvitationStatus.ACCEPTED, clock);
 
     expect(member.status).toBe(GroupMemberStatus.ACTIVE);
     expect(member.joinedAt).toEqual(now);
@@ -71,7 +77,7 @@ describe('ExpenseGroupMember', () => {
       ExpenseGroupIdFactory.create('group-1'),
     );
 
-    member.decideInvitation(GroupInvitationStatus.REJECTED, clock as any);
+    member.decideInvitation(GroupInvitationStatus.REJECTED, clock);
 
     expect(member.status).toBe(GroupMemberStatus.DECLINED);
     expect(member.joinedAt).toBeNull();
@@ -84,14 +90,14 @@ describe('ExpenseGroupMember', () => {
       AuthUserIdFactory.create('user-invited'),
       ExpenseGroupIdFactory.create('group-1'),
     );
-    invited.expireInvitation(clock as any);
+    invited.expireInvitation(clock);
 
     expect(invited.status).toBe(GroupMemberStatus.EXPIRED);
     expect(invited.endedAt).toEqual(now);
-    expect(() => invited.expireInvitation(clock as any)).toThrow();
+    expect(() => invited.expireInvitation(clock)).toThrow();
 
     const active = createActiveMember().member;
-    expect(() => active.expireInvitation(clock as any)).toThrow();
+    expect(() => active.expireInvitation(clock)).toThrow();
     expect(active.status).toBe(GroupMemberStatus.ACTIVE);
   });
 });

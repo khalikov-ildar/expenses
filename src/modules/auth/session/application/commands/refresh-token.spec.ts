@@ -6,6 +6,7 @@ import {
 import { RefreshToken, RefreshTokenIdFactory } from '../../domain/refresh-token.js';
 import { RefreshTokenHandler } from './refresh-token.js';
 import { RefreshTokenPolicy } from '../../domain/refresh-token.policy.js';
+import type { Clock } from '@/shared/domain/clock.js';
 
 describe('RefreshTokenHandler', () => {
   const now = new Date('2026-09-18T00:00:00.000Z');
@@ -38,8 +39,13 @@ describe('RefreshTokenHandler', () => {
       decode: vitest.fn().mockReturnValue({ exp: Math.floor(new Date('2026-10-18T00:00:00.000Z').getTime() / 1000) }),
     };
     const userRepo = { findById: vitest.fn().mockResolvedValue({ id: 'user-1' }) };
-    const clock = { now: () => now };
-    const policy = new RefreshTokenPolicy(clock as any);
+    const clock = {
+      now: () => now,
+      nowInMs: () => now.getTime(),
+      fromMs: (ms: number) => new Date(ms),
+      after: (ms: number) => new Date(now.getTime() + ms),
+    } satisfies Clock;
+    const policy = new RefreshTokenPolicy(clock);
     const context = {
       userId: 'user-1',
       jti: current.id,
@@ -58,9 +64,10 @@ describe('RefreshTokenHandler', () => {
       family,
       current,
       repo,
+      hasher,
       tokenProvider,
       handler: new RefreshTokenHandler(
-        clock as any,
+        clock,
         userRepo as any,
         repo as any,
         hasher as any,
@@ -91,11 +98,21 @@ describe('RefreshTokenHandler', () => {
     expect(replacement.generation).toBe(1);
   });
 
+  test('rejects a presented token whose hash does not match the persisted token', async () => {
+    const { handler, repo, hasher } = setup();
+    hasher.compare.mockReturnValue(false);
+
+    await expect(handler.execute()).rejects.toMatchObject({ code: 'unauthorized' });
+
+    expect(repo.rotate).not.toHaveBeenCalled();
+    expect(repo.revokeFamily).not.toHaveBeenCalled();
+  });
+
   test('revokes only the current family when a rotated token is replayed', async () => {
     const { handler, repo, family, current } = setup();
     current.rotate(now, RefreshTokenIdFactory.random());
 
-    await expect(handler.execute()).rejects.toThrow();
+    await expect(handler.execute()).rejects.toMatchObject({ code: 'refresh_token_reuse_detected' });
     expect(repo.revokeFamily).toHaveBeenCalledWith(family.id, RefreshTokenRevocationReasons.REUSE_DETECTED);
     expect(repo.revokeAllForUser).not.toHaveBeenCalled();
   });
