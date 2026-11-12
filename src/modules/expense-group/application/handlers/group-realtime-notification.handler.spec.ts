@@ -152,7 +152,7 @@ describe('GroupRealtimeNotificationHandler', () => {
       { id: 'member-inviter', identityId: 'user-inviter' },
       { id: 'member-another', identityId: 'user-another' },
     ]);
-    const leftEvent = { ...event('group-member.left'), aggregateId: 'member-left' };
+    const leftEvent = { ...event('group-member.left'), aggregateType: 'ExpenseGroupMember', aggregateId: 'member-left' };
 
     await handler.memberLeft(leftEvent);
 
@@ -176,7 +176,13 @@ describe('GroupRealtimeNotificationHandler', () => {
       { id: 'member-invitee-2', identityId: 'user-invitee' },
     ]);
 
-    await handler.expenseCreated(event('expense-group.expense.created'));
+    const expenseEvent = {
+      ...event('expense-group.expense.created'),
+      aggregateType: 'Expense',
+      aggregateId: 'expense-1',
+    };
+
+    await handler.expenseCreated(expenseEvent);
 
     expect(notifications.notifyUser).toHaveBeenCalledTimes(1);
     expect(notifications.notifyUser).toHaveBeenCalledWith(
