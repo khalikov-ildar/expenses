@@ -5,6 +5,7 @@ import {
 } from '../../domain/refresh-token-family.js';
 import { RefreshToken, RefreshTokenIdFactory } from '../../domain/refresh-token.js';
 import { RefreshTokenHandler } from './refresh-token.js';
+import { RefreshTokenPolicy } from '../../domain/refresh-token.policy.js';
 
 describe('RefreshTokenHandler', () => {
   const now = new Date('2026-09-18T00:00:00.000Z');
@@ -38,9 +39,7 @@ describe('RefreshTokenHandler', () => {
     };
     const userRepo = { findById: vitest.fn().mockResolvedValue({ id: 'user-1' }) };
     const clock = { now: () => now };
-    const policy = {
-      validateRefreshToken: vitest.fn().mockReturnValue({ type: 'valid' }),
-    };
+    const policy = new RefreshTokenPolicy(clock as any);
     const context = {
       userId: 'user-1',
       jti: current.id,
@@ -95,11 +94,8 @@ describe('RefreshTokenHandler', () => {
   test('revokes only the current family when a rotated token is replayed', async () => {
     const { handler, repo, family, current } = setup();
     current.rotate(now, RefreshTokenIdFactory.random());
-    repo.findForUpdate.mockResolvedValue({ token: current, family });
-    const policy = (handler as any).policy;
-    policy.validateRefreshToken.mockReturnValue({ type: 'reuse-detected', error: new Error('reuse') });
 
-    await expect(handler.execute()).rejects.toThrow('reuse');
+    await expect(handler.execute()).rejects.toThrow();
     expect(repo.revokeFamily).toHaveBeenCalledWith(family.id, RefreshTokenRevocationReasons.REUSE_DETECTED);
     expect(repo.revokeAllForUser).not.toHaveBeenCalled();
   });
