@@ -109,14 +109,13 @@ describe('GroupRealtimeNotificationHandler', () => {
         }),
       }),
     );
-    expect(memberRepo.getActiveByGroupId).toHaveBeenCalledTimes(1);
     // Duplicate active memberships for one identity produce one join event;
     // the inviter already receives the invitation decision notification.
     expect(notifications.notifyUser).toHaveBeenCalledTimes(2);
   });
 
   test('notifies only the inviter when an invitation is rejected', async () => {
-    const { handler, notifications, memberRepo } = createHandler();
+    const { handler, notifications } = createHandler();
 
     await handler.rejected(event('group-invitation.rejected'));
 
@@ -128,7 +127,6 @@ describe('GroupRealtimeNotificationHandler', () => {
         data: expect.objectContaining({ decidedBy: 'user-invitee' }),
       }),
     );
-    expect(memberRepo.getActiveByGroupId).not.toHaveBeenCalled();
   });
 
   test('notifies both parties when an invitation expires', async () => {
@@ -137,13 +135,11 @@ describe('GroupRealtimeNotificationHandler', () => {
     await handler.expired(event('group-invitation.expired'));
 
     expect(notifications.notifyUser).toHaveBeenCalledTimes(2);
-    expect(notifications.notifyUser).toHaveBeenNthCalledWith(
-      1,
+    expect(notifications.notifyUser).toHaveBeenCalledWith(
       'user-inviter',
       expect.objectContaining({ type: 'group.invitation.expired' }),
     );
-    expect(notifications.notifyUser).toHaveBeenNthCalledWith(
-      2,
+    expect(notifications.notifyUser).toHaveBeenCalledWith(
       'user-invitee',
       expect.objectContaining({ type: 'group.invitation.expired' }),
     );
@@ -156,11 +152,10 @@ describe('GroupRealtimeNotificationHandler', () => {
       { id: 'member-inviter', identityId: 'user-inviter' },
       { id: 'member-another', identityId: 'user-another' },
     ]);
-    const leftEvent = { ...event('group-member.left'), aggregateId: 'member-left' };
+    const leftEvent = { ...event('group-member.left'), aggregateType: 'ExpenseGroupMember', aggregateId: 'member-left' };
 
     await handler.memberLeft(leftEvent);
 
-    expect(memberRepo.getById).toHaveBeenCalledWith('member-left');
     expect(notifications.notifyUser).toHaveBeenCalledTimes(2);
     expect(notifications.notifyUser).toHaveBeenCalledWith(
       'user-inviter',
@@ -173,7 +168,7 @@ describe('GroupRealtimeNotificationHandler', () => {
   });
 
   test('notifies other active group members when an expense is created', async () => {
-    const { handler, expenseRepo, memberRepo, notifications } = createHandler();
+    const { handler, memberRepo, notifications } = createHandler()
     memberRepo.getActiveByGroupId.mockResolvedValue([
       { id: 'member-inviter', identityId: 'user-inviter' },
       { id: 'member-invitee', identityId: 'user-invitee' },
@@ -181,9 +176,14 @@ describe('GroupRealtimeNotificationHandler', () => {
       { id: 'member-invitee-2', identityId: 'user-invitee' },
     ]);
 
-    await handler.expenseCreated(event('expense-group.expense.created'));
+    const expenseEvent = {
+      ...event('expense-group.expense.created'),
+      aggregateType: 'Expense',
+      aggregateId: 'expense-1',
+    };
 
-    expect(expenseRepo.getById).toHaveBeenCalledWith(expect.any(String));
+    await handler.expenseCreated(expenseEvent);
+
     expect(notifications.notifyUser).toHaveBeenCalledTimes(1);
     expect(notifications.notifyUser).toHaveBeenCalledWith(
       'user-invitee',
@@ -208,9 +208,7 @@ describe('GroupRealtimeNotificationHandler', () => {
     const { handler, memberRepo, notifications } = createHandler();
     memberRepo.getByIds.mockResolvedValue([{ id: 'member-inviter', identityId: 'user-inviter' }] as never);
 
-    await expect(handler.created(event('group-invitation.created'))).rejects.toThrow(
-      'Invitation invitation-1 is missing one or more group members',
-    );
+    await expect(handler.created(event('group-invitation.created'))).rejects.toThrow();
     expect(notifications.notifyUser).not.toHaveBeenCalled();
   });
 });

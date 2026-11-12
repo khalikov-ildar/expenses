@@ -1531,7 +1531,9 @@ describe('Expense-group HTTP and application journeys', () => {
     expect(await expireInvitations.execute(10)).toBe(0);
   });
 
-  it('allows only one concurrent decision for the same invitation', async () => {
+  it('returns one success and one conflict for competing invitation decisions', async () => {
+    // This checks the HTTP conflict contract against an in-memory compare-and-set adapter.
+    // It does not verify PostgreSQL row locks or transaction rollback under true DB concurrency.
     await request(app.getHttpServer())
       .post('/expense-group')
       .set('Authorization', bearer('alice'))

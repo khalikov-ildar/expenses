@@ -109,10 +109,6 @@ export class ExpenseGroupMember extends Aggregate<GroupMemberId, GroupMemberDoma
     }
   }
 
-  get id(): GroupMemberId {
-    return this.id;
-  }
-
   get identityId(): IdentityId {
     return this._identityId;
   }

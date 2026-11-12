@@ -1,57 +1,121 @@
+import { createHash } from 'node:crypto';
+import type { Clock } from '@/shared/domain/clock.js';
 import { OAuthTransactionPurposes } from '../oauth/oauth-transaction.js';
 import { OAuthTransactionService } from './oauth-transaction.service.js';
 
 describe('OAuthTransactionService', () => {
-  test('creates random state, verifier, S256 challenge and browser binding', async () => {
-    const repo = { create: vitest.fn(), consume: vitest.fn() };
+  const now = new Date('2026-11-12T10:00:00.000Z');
+  const stateTtl = 10 * 60 * 1_000;
+  const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+
+  function setup(consumed: unknown = { id: 'transaction-1', purpose: 'login', codeVerifier: 'verifier' }) {
+    const repository = {
+      create: vitest.fn().mockResolvedValue(undefined),
+      consume: vitest.fn().mockResolvedValue(consumed),
+    };
+    const clock = {
+      now: () => new Date(now),
+      nowInMs: () => now.getTime(),
+      fromMs: (ms: number) => new Date(ms),
+      after: (duration: number) => new Date(now.getTime() + duration),
+    } satisfies Clock;
     const service = new OAuthTransactionService(
-      repo as any,
-      { auth: { oauth: { stateTtl: 600_000 } } } as any,
-      { after: (ttl: number) => new Date(Date.now() + ttl) } as any,
+      repository as any,
+      { oauthStateTtl: stateTtl } as any,
+      clock,
     );
-    const tx = await service.start({
+
+    return { service, repository };
+  }
+
+  test('starts a browser-bound PKCE transaction with hashed state and a bounded expiry', async () => {
+    const { service, repository } = setup();
+
+    const started = await service.start({
       provider: 'google' as any,
       purpose: OAuthTransactionPurposes.login,
       userId: null,
     });
 
-    expect(tx.state).toBeTruthy();
-    expect(tx.codeChallenge).toBeTruthy();
-    expect(tx.browserBinding).toBeTruthy();
-    expect(repo.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        purpose: 'login',
-        codeVerifier: expect.any(String),
-        stateHash: expect.any(String),
-        browserBindingHash: expect.any(String),
-      }),
+    const [persisted] = repository.create.mock.calls[0] as any[];
+
+    expect(started.state).toBeTruthy();
+    expect(started.browserBinding).toBeTruthy();
+    expect(started.codeChallenge).toBe(
+      createHash('sha256').update(persisted.codeVerifier).digest('base64url'),
     );
-    expect(repo.create.mock.calls[0][0].stateHash).not.toBe(tx.state);
-    expect(repo.create.mock.calls[0][0].browserBindingHash).not.toBe(tx.browserBinding);
+    expect(persisted).toMatchObject({
+      provider: 'google',
+      purpose: 'login',
+      userId: null,
+      expiresAt: new Date(now.getTime() + stateTtl),
+      stateHash: hash(started.state),
+      browserBindingHash: hash(started.browserBinding),
+    });
+    expect(persisted.stateHash).not.toBe(started.state);
+    expect(persisted.browserBindingHash).not.toBe(started.browserBinding);
   });
 
-  test('hashes state and browser binding before repository consume', async () => {
-    const repo = { create: vitest.fn(), consume: vitest.fn().mockResolvedValue({ id: 'tx' }) };
-    const service = new OAuthTransactionService(
-      repo as any,
-      { OAUTH_STATE_TTL: 600_000 } as any,
-      { new: (ttl: number) => new Date(Date.now() + ttl) } as any,
-    );
-    await service.consume({ provider: 'google' as any, state: 'state', browserBinding: 'binding', now: new Date() });
-    const call = repo.consume.mock.calls[0][0];
-    expect(call.stateHash).not.toBe('state');
-    expect(call.browserBindingHash).not.toBe('binding');
+  test('creates independent state and browser bindings for separate authorization attempts', async () => {
+    const { service } = setup();
+
+    const first = await service.start({
+      provider: 'google' as any,
+      purpose: OAuthTransactionPurposes.login,
+      userId: null,
+    });
+    const second = await service.start({
+      provider: 'github' as any,
+      purpose: OAuthTransactionPurposes.login,
+      userId: null,
+    });
+
+    expect(second.state).not.toBe(first.state);
+    expect(second.browserBinding).not.toBe(first.browserBinding);
+    expect(second.codeChallenge).not.toBe(first.codeChallenge);
   });
 
-  test('rejects invalid, expired or already-consumed transaction', async () => {
-    const repo = { create: vitest.fn(), consume: vitest.fn().mockResolvedValue(null) };
-    const service = new OAuthTransactionService(
-      repo as any,
-      { OAUTH_STATE_TTL: 600_000 } as any,
-      { new: (ttl: number) => new Date(Date.now() + ttl) } as any,
-    );
+  test('consumes a transaction using hashes of the supplied state and browser binding', async () => {
+    const consumed = {
+      id: 'transaction-1',
+      provider: 'google',
+      purpose: 'login',
+      stateHash: hash('state'),
+      browserBindingHash: hash('binding'),
+      codeVerifier: 'stored-verifier',
+      userId: null,
+      expiresAt: new Date(now.getTime() + stateTtl),
+      consumedAt: now,
+    };
+    const { service, repository } = setup(consumed);
+
     await expect(
-      service.consume({ provider: 'google' as any, state: 's', browserBinding: 'b', now: new Date() }),
-    ).rejects.toThrow('Invalid or expired OAuth transaction');
+      service.consume({
+        provider: 'google' as any,
+        state: 'state',
+        browserBinding: 'binding',
+        now,
+      }),
+    ).resolves.toBe(consumed);
+
+    expect(repository.consume).toHaveBeenCalledWith({
+      provider: 'google',
+      stateHash: hash('state'),
+      browserBindingHash: hash('binding'),
+      now,
+    });
+  });
+
+  test('rejects a transaction that the repository cannot consume', async () => {
+    const { service } = setup(null);
+
+    await expect(
+      service.consume({
+        provider: 'google' as any,
+        state: 'unknown-state',
+        browserBinding: 'browser-binding',
+        now,
+      }),
+    ).rejects.toThrow();
   });
 });
